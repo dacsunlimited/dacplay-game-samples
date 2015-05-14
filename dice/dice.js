@@ -74,22 +74,21 @@ PLAY = PLAY || {},
 
 PLAY.version = "0.0.2",
 
+// TODO: We should not have the assumption that the asset id equals to game id.
+// TODO: The game info and game asset info should be loaded from "outside" when init the game engine instead.
+PLAY.game_id = 1,
+PLAY.game_asset = {
+        asset_id : 1,
+        symbol : "DICE"
+    },
+
 BTS_BLOCKCHAIN_NUM_DELEGATES = 101,
 
 BTS_BLOCKCHAIN_NUM_DICE = BTS_BLOCKCHAIN_NUM_DELEGATES / 10,
 
 BTS_BLOCKCHAIN_DICE_RANGE = 10000,
 
-BTS_BLOCKCHAIN_DICE_HOUSE_EDGE = 0,
-
-// TODO: We should not have the assumption that the asset id equals to game id.
-dice_game = {
-        asset_id : 1,
-        asset : "DICE",
-        game_symbol: "DICE"
-    },
-
-	game_type = 1;
+BTS_BLOCKCHAIN_DICE_HOUSE_EDGE = 0;
 
 /*
  * Play this game with input in the context to blockchain and wallet
@@ -112,7 +111,7 @@ PLAY.play = function (blockchain, wallet, input, record, trx) {
     
     // V8_API: blockchain::get_asset_record
     // TODO: permission limitation to other assets.
-    var asset_record = blockchain.get_asset_record(dice_game.asset);
+    var asset_record = blockchain.get_asset_record(PLAY.game_asset.symbol);
     //FC_ASSERT( asset_rec.valid() );
     
     // V8_API: asset_record.precision
@@ -188,7 +187,7 @@ PLAY.evaluate = function(self, eval_state, eval_state_current_state){
     //    FC_CAPTURE_AND_THROW( invalid_dice_odds, (odds) );
         
     // V8_API: eval_state_current_state::get_asset_record
-    var dice_asset_record = eval_state_current_state.get_asset_record(dice_game.asset);
+    var dice_asset_record = eval_state_current_state.get_asset_record(PLAY.game_asset.symbol);
     // V8_Valid
     //if( !dice_asset_record )
         //FC_CAPTURE_AND_THROW( unknown_asset_symbol, ( eval_state.trx.id() ) );
@@ -196,7 +195,7 @@ PLAY.evaluate = function(self, eval_state, eval_state_current_state){
     // For each transaction, there must be only one dice operatiion exist
     // TODO: improve the rule id representation for rule record
     // V8_API: eval_state_current_state::get_game_data_record
-    var cur_record = eval_state_current_state.get_game_data_record(game_type, eval_state.trx.id()._hash[0]);
+    var cur_record = eval_state_current_state.get_game_data_record(PLAY.game_id, eval_state.trx.id()._hash[0]);
     
     // V8_Valid
     //if( cur_record )
@@ -223,7 +222,7 @@ PLAY.evaluate = function(self, eval_state, eval_state_current_state){
     
     // TODO: Game Logic: remove game_data_record
     // V8_API: eval_state_current_state::store_game_data_record
-    eval_state_current_state.store_game_data_record(game_type, cur_data.id._hash[0], game_data_record(dice_record));
+    eval_state_current_state.store_game_data_record(PLAY.game_id, cur_data.id._hash[0], game_data_record(dice_record));
 };
 
 // game execute during extain chain and deterministrix transaction apply
@@ -264,10 +263,10 @@ PLAY.execute = function (blockchain, block_num, pending_state){
                 // add the jackpot to the accout's balance, give the jackpot from virtul pool to winner
                    
                 // TODO: Dice, what should be the slate_id for the withdraw_with_signature, if need, we can set to the jackpot owner?
-                var jackpot_balance_address = V8_Global_Get_Balance_ID_For_Owner(game_data.owner, dice_game.asset_id);
+                var jackpot_balance_address = V8_Global_Get_Balance_ID_For_Owner(game_data.owner, PLAY.game_asset.asset_id);
                 var jackpot_payout = pending_state.get_balance_record( jackpot_balance_address );
                 if( !jackpot_payout )
-                    jackpot_payout = balance_record( game_data.owner, asset(0, dice_game.asset_id), dice_game.asset_id);
+                    jackpot_payout = balance_record( game_data.owner, asset(0, PLAY.game_asset.asset_id), PLAY.game_asset.asset_id);
                 jackpot_payout.balance += jackpot;
                 jackpot_payout.last_update = Date.now();
                    
@@ -408,7 +407,7 @@ PLAY.scan = function( rule, wallet_transaction_record, wallet )
                             // TODO: Read Accessor to public_key
                             entry.to_account = opt_key_rec.public_key;
                             // TODO: Constructor asset( amount, 1 )
-                            entry.amount = asset( self.amount, dice_game.asset_id );
+                            entry.amount = asset( self.amount, PLAY.game_asset.asset_id );
                             entry.memo = "play dice";
                             return true;
                         }

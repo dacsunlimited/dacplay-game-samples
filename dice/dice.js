@@ -1,69 +1,6 @@
 // This is the rule definition for demo dice game
 // All data structrue are defined in JSON in javascript, and being mapped to variant object in C++, be packed before storing in database
 // Validate and parse this script before uploading, tools: http://lisperator.net/uglifyjs/parser
-// Data structures that is need by this game
-/******************
-    struct dice_data
-    {
-        dice_data(){}
-        
-        dice_id_type        id = dice_id_type();
-        address             owner;
-        share_type          amount;
-        uint32_t            odds;
-        uint32_t            guess;
-    };
-    
-    struct dice_rule
-    {
-        static const uint8_t    type;
-        
-        dice_rule():amount(0), odds(1){}
-        
-        dice_rule( const bts::blockchain::address& owner, bts::blockchain::share_type amnt, uint32_t odds = 2, uint32_t g = 1 );
-        
-        // This util method should be provided as util methods in JSON and C++
-        bts::blockchain::address owner()const;
-        
-        // owner is just the hash of the condition
-        bts::blockchain::balance_id_type                balance_id()const;
-        
-        bts::blockchain::share_type          amount;
-        uint32_t            odds;
-        uint32_t            guess;
-        
-        // the condition that the funds may be withdrawn,this is only necessary if the address is new.
-        bts::blockchain::withdraw_condition  condition;
-    };
-    
-    struct dice_input
-    {
-        dice_input() {}
-        dice_input( std::string name, double a, uint32_t o, uint32_t g )
-        :from_account_name(name), amount(a), odds(o), guess(g) {}
-        
-        std::string     from_account_name;
-        double          amount;
-        uint32_t        odds;
-        uint32_t        guess;
-    };
-    
-    struct dice_transaction
-    {
-        static const uint8_t    type;
-        
-        dice_transaction(){}
-        
-        address                                   play_owner;
-        address                                   jackpot_owner;
-        share_type                                play_amount;
-        share_type                                jackpot_received;
-        uint32_t                                  odds;
-        uint32_t                                  lucky_number;
-    };
-    const uint8_t dice_rule::type = dice_rule_type;
-    const uint8_t dice_transaction::type = dice_rule_type;
-**************/
 // require("play.js")
 // TODO: Add the substitute for FC_CAPTURE_AND_THROW and FC_ASSERT
 // TODO: Mapping between js object and C++ variant
@@ -108,10 +45,12 @@ PLAY.play = function (blockchain, wallet, input, record, trx) {
     
     // V8_API: wallet::get_transaction_fee
     var required_fees = wallet.get_transaction_fee();
+    print(required_fees);
     
     // V8_API: blockchain::get_asset_record
     // TODO: permission limitation to other assets.
     var asset_record = blockchain.get_asset_record(PLAY.game_asset.symbol);
+    print(asset_record);
     //FC_ASSERT( asset_rec.valid() );
     
     // V8_API: asset_record.precision
@@ -435,3 +374,68 @@ PLAY.scan = function( rule, wallet_transaction_record, wallet )
    
    return false;
 }
+
+// Data structures that is need by this game
+/******************
+    struct dice_data
+    {
+        dice_data(){}
+        
+        dice_id_type        id = dice_id_type();
+        address             owner;
+        share_type          amount;
+        uint32_t            odds;
+        uint32_t            guess;
+    };
+    
+    struct dice_rule
+    {
+        static const uint8_t    type;
+        
+        dice_rule():amount(0), odds(1){}
+        
+        dice_rule( const bts::blockchain::address& owner, bts::blockchain::share_type amnt, uint32_t odds = 2, uint32_t g = 1 );
+        
+        // This util method should be provided as util methods in JSON and C++
+        bts::blockchain::address owner()const;
+        
+        // owner is just the hash of the condition
+        bts::blockchain::balance_id_type                balance_id()const;
+        
+        bts::blockchain::share_type          amount;
+        uint32_t            odds;
+        uint32_t            guess;
+        
+        // the condition that the funds may be withdrawn,this is only necessary if the address is new.
+        bts::blockchain::withdraw_condition  condition;
+    };
+    
+    struct dice_input
+    {
+        dice_input() {}
+        dice_input( std::string name, double a, uint32_t o, uint32_t g )
+        :from_account_name(name), amount(a), odds(o), guess(g) {}
+        
+        std::string     from_account_name;
+        double          amount;
+        uint32_t        odds;
+        uint32_t        guess;
+    };
+    
+    struct dice_transaction
+    {
+        static const uint8_t    type;
+        
+        dice_transaction(){}
+        
+        address                                   play_owner;
+        address                                   jackpot_owner;
+        share_type                                play_amount;
+        share_type                                jackpot_received;
+        uint32_t                                  odds;
+        uint32_t                                  lucky_number;
+    };
+    const uint8_t dice_rule::type = dice_rule_type;
+    const uint8_t dice_transaction::type = dice_rule_type;
+**************/
+

@@ -72,7 +72,7 @@ var
 
 PLAY = PLAY || {},
 
-versoin = "0.0.1",
+PLAY.version = "0.0.2",
 
 BTS_BLOCKCHAIN_NUM_DELEGATES = 101,
 

@@ -1,5 +1,6 @@
 // This is the rule definition for demo dice game
 // All data structrue are defined in JSON in javascript, and being mapped to variant object in C++, be packed before storing in database
+// Validate and parse this script before uploading, tools: http://lisperator.net/uglifyjs/parser
 // Data structures that is need by this game
 /******************
     struct dice_data
@@ -72,16 +73,6 @@ var
 
 PLAY = PLAY || {},
 
-PLAY.version = "0.0.2",
-
-// TODO: We should not have the assumption that the asset id equals to game id.
-// TODO: The game info and game asset info should be loaded from "outside" when init the game engine instead.
-PLAY.game_id = 1,
-PLAY.game_asset = {
-        asset_id : 1,
-        symbol : "DICE"
-    },
-
 BTS_BLOCKCHAIN_NUM_DELEGATES = 101,
 
 BTS_BLOCKCHAIN_NUM_DICE = BTS_BLOCKCHAIN_NUM_DELEGATES / 10,
@@ -90,6 +81,15 @@ BTS_BLOCKCHAIN_DICE_RANGE = 10000,
 
 BTS_BLOCKCHAIN_DICE_HOUSE_EDGE = 0;
 
+PLAY.version = "0.0.2";
+
+// TODO: We should not have the assumption that the asset id equals to game id.
+// TODO: The game info and game asset info should be loaded from "outside" when init the game engine instead.
+PLAY.game_id = 1;
+PLAY.game_asset = {
+        asset_id : 1,
+        symbol : "DICE"
+    };
 /*
  * Play this game with input in the context to blockchain and wallet
  * 

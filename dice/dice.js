@@ -3,7 +3,6 @@
 // Validate and parse this script before uploading, tools: http://lisperator.net/uglifyjs/parser
 // require("play.js")
 // TODO: Add the substitute for FC_CAPTURE_AND_THROW and FC_ASSERT
-// TODO: Mapping between js object and C++ variant
 // TODO: Input: {game_input}, Output: {operation_game_data, wallet_transaction_record, game_result_transaction}
 
 var
@@ -29,91 +28,46 @@ PLAY.game_asset = {
     };
 /*
  * Play this game with input in the context to blockchain and wallet
- * 
- * input is a variant object passed in by v8 api {TODO: How to covert variant in C++ to js object here}
- * sign indicates that the result transaction should be signed or not
- * { operations, ledger_entries, required_signatures}
+ * V8_API: wallet::get_transaction_fee(deprecated)
+ * V8_API: blockchain::get_account_record (deprecated)
+ * V8_API: play_account::active_key(deprecated)
+ *
+ * input is a variant object passed in by v8 api
+ * input demo
+    {
+        "from_account_name": "alice",
+        "amount":          	10.2,
+        "odds":        		3,
+        "guess":        	1
+    }
+ * provided with PLAY_CODE = [from_account, to_account, amount, memo, PLAY_CODE(optional)]
+ * @return PLAY_CODE
  */
-PLAY.play = function (blockchain, wallet, input, record, trx) {
+PLAY.play = function (blockchain, wallet, input) {
     //try {  
     
     // V8_Vaild
     //FC_ASSERT( input.amount > 0 );
     //FC_ASSERT( input.odds > 0 );
     
-    var required_signatures = [];   // TODO: js array to unordered_set<address>
-    
-    // V8_API: wallet::get_transaction_fee
-    var required_fees = wallet.get_transaction_fee();
-    print(required_fees);
-    
     // V8_API: blockchain::get_asset_record
-    // TODO: permission limitation to other assets.
     var asset_record = blockchain.get_asset_record(PLAY.game_asset.symbol);
     print(asset_record);
     //FC_ASSERT( asset_rec.valid() );
     
-    // V8_API: asset_record.precision
-    // TODO: access property precision for asset record
-    var amount_to_play = input.amount * asset_record.precision;
+    var amount_to_play = Math.ceil( input.amount * asset_record.precision );
+	print( amount_to_play );
     // V8_Valid
     // FC_ASSERT( amount_to_play > 0 );
     
     // V8_API: constructor for asset, and accessor to id
-    var chips_to_play = asset(amount_to_play, asset_record.id);
+    var chips_to_play = {
+		"amount"  : amount_to_play,
+		"asset_id": asset_record.id
+	};
     
-    // V8_Vaild
-    //if( ! blockchain->is_valid_account_name( input.from_account_name ) )
-    //    FC_THROW_EXCEPTION( bts::wallet::invalid_name, "Invalid account name!", ("dice_account_name",d_input.from_account_name) );
-    
-    // V8_API: blockchain::get_account_record
-    var play_account = blockchain.get_account_record(input.from_account_name);
-    
-    // TODO make sure it is using account active key    
-    wallet.withdraw_to_transaction(chips_to_play,
-                                    input.from_account_name,
-                                    trx,
-                                    required_signatures);
-        
-    wallet.withdraw_to_transaction( required_fees,
-                                    input.from_account_name,
-                                    trx,
-                                    required_signatures );
-    
-    // V8_API: play_account::active_key
-    required_signatures.push( play_account.active_key() );
-    
-    // TODO: Dice, specify to account, the receiver who can claim jackpot
-    
-    // bts::game::dice_rule(address( play_account->active_key() ), amount_to_play, input.odds, input.guess )
-	// TODO: changed to game_input
-    var dice_rule = {
-        address : address( play_account.active_key() ),     // TODO, address constructor
-        amount  : amount_to_play,
-        odds    : input.odds,
-        guess   : input.guess
-    };
-    
-    // slate_id 0, TODO: game_operation constructor, trx operations accessor
-    // TODO: then how to map the structs, delete bts::game::rule in C++, replace with a rule_id and variant
-    // trx.operations.push_back( game_operation(bts::game::dice_rule(address( play_account->active_key() ), amount_to_play, d_input.odds, d_input.guess ))//slate_id 0 );
-    // create the operations according to rule_type and input types, ?
-    
-    // V8_API: trx.operations
-    // V8_API: operations::push ?? if operations is array this might not needed.
-    // V8_API: contructor game_operation()
-    trx.operations.push( game_operation(dice_rule) );
-
-    // json to bts::wallet::ledger_entry, might similar to json --> variant --> ledger_entry.from_variant
-    var entry = {
-        from_account : play_account.active_key(),
-        to_account : play_account.active_key(),
-        memo : "play dice"
-    }
-
-    record.ledger_entries.push(entry);
-    record.fee = required_fees;
-        
+	return [input.from_account_name, input.from_account_name, chips_to_play, "play dice"];
+	
     //} FC_CAPTURE_AND_RETHROW( (params) )
 };
 
@@ -408,18 +362,6 @@ PLAY.scan = function( rule, wallet_transaction_record, wallet )
         
         // the condition that the funds may be withdrawn,this is only necessary if the address is new.
         bts::blockchain::withdraw_condition  condition;
-    };
-    
-    struct dice_input
-    {
-        dice_input() {}
-        dice_input( std::string name, double a, uint32_t o, uint32_t g )
-        :from_account_name(name), amount(a), odds(o), guess(g) {}
-        
-        std::string     from_account_name;
-        double          amount;
-        uint32_t        odds;
-        uint32_t        guess;
     };
     
     struct dice_transaction

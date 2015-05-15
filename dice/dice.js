@@ -28,8 +28,8 @@ PLAY.game_asset = {
     };
 /*
  * Play this game with input in the context to blockchain and wallet
- * V8_API: wallet::get_transaction_fee(deprecated)
- * V8_API: blockchain::get_account_record (deprecated)
+ * V8_API: wallet::get_transaction_fee [Deprecated]
+ * V8_API: blockchain::get_account_record [Deprecated]
  * V8_API: play_account::active_key(deprecated)
  *
  * input is a variant object passed in by v8 api
@@ -72,50 +72,67 @@ PLAY.play = function (blockchain, wallet, input) {
 };
 
 /*
- * Instead of defining the evaluate function as a method of rule, pass the rule to the function
+ * Evaluate the game operation
+ *     
+    
+    // V8_API: eval_state_current_state::store_game_data_record [Deprecated]
+    // eval_state_current_state.store_game_data_record(PLAY.game_id, data_index, game_data_rec);
+ *
+ * @return balances for sub from eval_state and store to pending_state
+ * {
+	"to_balances": [to_balance],	// will be stored and sub from current eval_state
+    "datas" : [game_data]			// if directly return the data_id instead of a object, meaning to remove this data
+ * }
  */
-PLAY.evaluate = function(self, eval_state, eval_state_current_state){
+PLAY.evaluate = function(eval_state, pending_state, input){
     // V8_Valid
-    //if( self.odds < 1 || self.odds < self.guess || self.guess < 1)
+    //if( input.odds < 1 || input.odds < input.guess || input.guess < 1)
     //    FC_CAPTURE_AND_THROW( invalid_dice_odds, (odds) );
         
     // V8_API: eval_state_current_state::get_asset_record
-    var dice_asset_record = eval_state_current_state.get_asset_record(PLAY.game_asset.symbol);
+    var dice_asset_record = pending_state.get_asset_record(PLAY.game_asset.symbol);
+	print( dice_asset_record );
     // V8_Valid
     //if( !dice_asset_record )
         //FC_CAPTURE_AND_THROW( unknown_asset_symbol, ( eval_state.trx.id() ) );
+	
+	var dice_amount = Math.ceil( input.amount * dice_asset_record.precision );
+	print( dice_amount );
+	
+	var data_index = eval_state.trx.id()._hash[0];
     
     // For each transaction, there must be only one dice operatiion exist
     // TODO: improve the rule id representation for rule record
     // V8_API: eval_state_current_state::get_game_data_record
-    var cur_record = eval_state_current_state.get_game_data_record(PLAY.game_id, eval_state.trx.id()._hash[0]);
-    
+    var cur_record = pending_state.get_game_data_record(PLAY.game_id, data_index);
     // V8_Valid
     //if( cur_record )
         //FC_CAPTURE_AND_THROW( duplicate_dice_in_transaction, ( eval_state.trx.id() ) );
+		
+	var to_balance = {
+		// TODO: Game Logic: this does not means the balance are now stored in balance record, just over pass the api
+		// the dice record are not in any balance record, they are over-fly-on-sky.
+		// equal to use zero_condition(withdraw_with_signature(), dice_asset_record->id);
+		"owner" : "PLS123456789012345678901234567890123",
+		"asset" : {
+			"amount"  : dice_amount,
+			"asset_id": dice_asset_record.id
+		}
+	};
     
-    
-    
-    // TODO: Game Logic: this does not means the balance are now stored in balance record, just over pass the api
-    // the dice record are not in any balance record, they are over-fly-on-sky.
-    // V8_API: dice_asset_record.id
-    // V8_API: self::balance_id and self.amount what the self here.
-    // V8_API: eval_state::sub_balance
-    eval_state.sub_balance( asset(self.amount, dice_asset_record.id));
-    
-    
-    // rule_dice_record cur_data;
-    var dice_record = {
-        id : eval_state.trx.id(),
-        amount : self.amount,
-        owner : self.owner(),
-        odds : self.odds,
-        guess : self.guess
+	// TODO the game data must have a index attr with type uint_32.
+    var dice_data = {
+        index : data_index,
+        amount : dice_amount,
+        owner : input.from_account, // self.owner() instead: input.from_account -> active_key -> owner_address -> withdraw_condition -> balance_id
+        odds : input.odds,
+        guess : input.guess
     };
-    
-    // TODO: Game Logic: remove game_data_record
-    // V8_API: eval_state_current_state::store_game_data_record
-    eval_state_current_state.store_game_data_record(PLAY.game_id, cur_data.id._hash[0], game_data_record(dice_record));
+	
+	return {
+		"to_balances" : [to_balance],
+		"datas" : [dice_data]
+	};
 };
 
 // game execute during extain chain and deterministrix transaction apply

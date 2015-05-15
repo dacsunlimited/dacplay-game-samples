@@ -99,7 +99,14 @@ PLAY.evaluate = function(eval_state, pending_state, input){
 	var dice_amount = Math.ceil( input.amount * dice_asset_record.precision );
 	print( dice_amount );
 	
-	var data_index = eval_state.trx.id()._hash[0];
+	var trx_id = eval_state.get_transaction_id();
+	print( trx_id );
+	
+	var hash_array = trx_id_to_hash_array(trx_id);
+	print ( hash_array );
+	
+	var data_index = hash_array[0];
+	print ( data_index );
     
     // For each transaction, there must be only one dice operatiion exist
     // TODO: improve the rule id representation for rule record

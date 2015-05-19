@@ -120,7 +120,7 @@ PLAY.evaluate = function(eval_state, pending_state, input){
 		// TODO: Game Logic: this does not means the balance are now stored in balance record, just over pass the api
 		// the dice record are not in any balance record, they are over-fly-on-sky.
 		// equal to use zero_condition(withdraw_with_signature(), dice_asset_record->id);
-      // PLS4Attt64KDdan23RJ1rf98cNPAmAp1YnSN = (convert_to_native_address 1Dice12345612345612345612345XLJ3zy)
+      // XTS4Attt64KDdan23RJ1rf98cNPAmAp1YnSN = (convert_to_native_address 1Dice12345612345612345612345XLJ3zy)
 		"owner" : "XTS4Attt64KDdan23RJ1rf98cNPAmAp1YnSN",
 		"asset" : {
 			"amount"  : dice_amount,

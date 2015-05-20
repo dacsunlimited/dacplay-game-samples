@@ -149,26 +149,34 @@ PLAY.execute = function (blockchain, block_num, pending_state){
    	    return;
 	}
 
-	var block_random_num = blockchain_context.get_current_random_seed();
+	var random_seed = blockchain.get_current_random_seed();
+	print(random_seed);
+
+	var hash_array = trx_id_to_hash_array(random_seed);
+	
+	var block_random_num = hash_array[0];
+	print (block_random_num);
 
 	var range = BTS_BLOCKCHAIN_DICE_RANGE;
 
 	var block_num_of_dice = block_num - BTS_BLOCKCHAIN_NUM_DICE;
 
-	var block_of_dice = blockchain_context.getblock(block_num_of_dice);
+	var block_of_dice = blockchain.get_block(block_num_of_dice);
+	print(block_of_dice);
 	
 	var trxs = block_of_dice.get_transactions();
+	print(trxs);
 	
 	for (var trx in trxs)
 	{
 		var id = trx.id();
 		// TODO: define the type
-		var game_data = blockchain_context.get_game_data_record(type, id.hash(0));
+		var game_data = blockchain.get_game_data_record(type, trx_id_to_hash_array(id)[0]);
         
 		if (game_data)
 		{
 			// TODO hash to be defined in V8
-			var dice_random_num = id.hash(0);
+			var dice_random_num = trx_id_to_hash_array(id)[0];
 			
 			// win condition
             var lucky_number = ( ( ( block_random_num % range ) + ( dice_random_num % range ) ) % range ) * (game_data.odds);
@@ -197,7 +205,7 @@ PLAY.execute = function (blockchain, block_num, pending_state){
             shares_destroyed += game_data.amount;
             
 			// remove the dice_record from pending state after execute the jackpot
-            pending_state.store_game_data_record(type, id._hash[0], null);
+            pending_state.store_game_data_record(type, trx_id_to_hash_array(id)[0], null);
                
             var dice_trx = {
                 play_owner : game_data.owner,
@@ -352,43 +360,10 @@ PLAY.scan = function( rule, wallet_transaction_record, wallet )
     }
    
    return false;
-}
+};
 
 // Data structures that is need by this game
 /******************
-    struct dice_data
-    {
-        dice_data(){}
-        
-        dice_id_type        id = dice_id_type();
-        address             owner;
-        share_type          amount;
-        uint32_t            odds;
-        uint32_t            guess;
-    };
-    
-    struct dice_rule
-    {
-        static const uint8_t    type;
-        
-        dice_rule():amount(0), odds(1){}
-        
-        dice_rule( const bts::blockchain::address& owner, bts::blockchain::share_type amnt, uint32_t odds = 2, uint32_t g = 1 );
-        
-        // This util method should be provided as util methods in JSON and C++
-        bts::blockchain::address owner()const;
-        
-        // owner is just the hash of the condition
-        bts::blockchain::balance_id_type                balance_id()const;
-        
-        bts::blockchain::share_type          amount;
-        uint32_t            odds;
-        uint32_t            guess;
-        
-        // the condition that the funds may be withdrawn,this is only necessary if the address is new.
-        bts::blockchain::withdraw_condition  condition;
-    };
-    
     struct dice_transaction
     {
         static const uint8_t    type;

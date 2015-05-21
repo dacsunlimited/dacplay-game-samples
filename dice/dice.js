@@ -11,7 +11,7 @@ PLAY = PLAY || {},
 
 BTS_BLOCKCHAIN_NUM_DELEGATES = 101,
 
-BTS_BLOCKCHAIN_NUM_DICE = BTS_BLOCKCHAIN_NUM_DELEGATES / 10,
+BTS_BLOCKCHAIN_NUM_DICE = Math.floor(BTS_BLOCKCHAIN_NUM_DELEGATES / 10),
 
 BTS_BLOCKCHAIN_DICE_RANGE = 10000,
 
@@ -36,9 +36,9 @@ PLAY.game_asset = {
  * input demo
     {
         "from_account_name": "alice",
-        "amount":          	10.2,
-        "odds":        		3,
-        "guess":        	1
+        "amount":             10.2,
+        "odds":            3,
+        "guess":           1
     }
  * provided with PLAY_CODE = [from_account, to_account, amount, memo, PLAY_CODE(optional)]
  * @return PLAY_CODE
@@ -56,18 +56,18 @@ PLAY.play = function (blockchain, wallet, input) {
     //FC_ASSERT( asset_rec.valid() );
     
     var amount_to_play = Math.ceil( input.amount * asset_record.precision );
-	print( amount_to_play );
+   print( amount_to_play );
     // V8_Valid
     // FC_ASSERT( amount_to_play > 0 );
     
     // V8_API: constructor for asset, and accessor to id
     var chips_to_play = {
-		"amount"  : amount_to_play,
-		"asset_id": asset_record.id
-	};
+      "amount"  : amount_to_play,
+      "asset_id": asset_record.id
+   };
     
-	return [input.from_account_name, input.from_account_name, chips_to_play, "play dice"];
-	
+   return [input.from_account_name, input.from_account_name, chips_to_play, "play dice"];
+   
     //} FC_CAPTURE_AND_RETHROW( (params) )
 };
 
@@ -80,8 +80,8 @@ PLAY.play = function (blockchain, wallet, input) {
  *
  * @return balances for sub from eval_state and store to pending_state
  * {
-	"to_balances": [to_balance],	// will be stored and sub from current eval_state
-    "datas" : [game_data]			// if directly return the data_id instead of a object, meaning to remove this data
+   "to_balances": [to_balance],  // will be stored and sub from current eval_state
+    "datas" : [game_data]        // if directly return the data_id instead of a object, meaning to remove this data
  * }
  */
 PLAY.evaluate = function(eval_state, pending_state, input){
@@ -91,22 +91,22 @@ PLAY.evaluate = function(eval_state, pending_state, input){
         
     // V8_API: eval_state_current_state::get_asset_record
     var dice_asset_record = pending_state.get_asset_record(PLAY.game_asset.symbol);
-	print( dice_asset_record );
+   print( dice_asset_record );
     // V8_Valid
     //if( !dice_asset_record )
         //FC_CAPTURE_AND_THROW( unknown_asset_symbol, ( eval_state.trx.id() ) );
-	
-	var dice_amount = Math.ceil( input.amount * dice_asset_record.precision );
-	print( dice_amount );
-	
-	var trx_id = eval_state.get_transaction_id();
-	print( trx_id );
-	
-	var hash_array = trx_id_to_hash_array(trx_id);
-	print ( hash_array );
-	
-	var data_index = hash_array[0];
-	print ( data_index );
+   
+   var dice_amount = Math.ceil( input.amount * dice_asset_record.precision );
+   print( dice_amount );
+   
+   var trx_id = eval_state.get_transaction_id();
+   print( trx_id );
+   
+   var hash_array = trx_id_to_hash_array(trx_id);
+   print ( hash_array );
+   
+   var data_index = hash_array[0];
+   print ( data_index );
     
     // For each transaction, there must be only one dice operatiion exist
     // TODO: improve the rule id representation for rule record
@@ -115,20 +115,20 @@ PLAY.evaluate = function(eval_state, pending_state, input){
     // V8_Valid
     //if( cur_record )
         //FC_CAPTURE_AND_THROW( duplicate_dice_in_transaction, ( eval_state.trx.id() ) );
-		
-	var to_balance = {
-		// TODO: Game Logic: this does not means the balance are now stored in balance record, just over pass the api
-		// the dice record are not in any balance record, they are over-fly-on-sky.
-		// equal to use zero_condition(withdraw_with_signature(), dice_asset_record->id);
+      
+   var to_balance = {
+      // TODO: Game Logic: this does not means the balance are now stored in balance record, just over pass the api
+      // the dice record are not in any balance record, they are over-fly-on-sky.
+      // equal to use zero_condition(withdraw_with_signature(), dice_asset_record->id);
       // XTS4Attt64KDdan23RJ1rf98cNPAmAp1YnSN = (convert_to_native_address 1Dice12345612345612345612345XLJ3zy)
-		"owner" : "XTS4Attt64KDdan23RJ1rf98cNPAmAp1YnSN",
-		"asset" : {
-			"amount"  : dice_amount,
-			"asset_id": dice_asset_record.id
-		}
-	};
+      "owner" : "XTS4Attt64KDdan23RJ1rf98cNPAmAp1YnSN",
+      "asset" : {
+         "amount"  : dice_amount,
+         "asset_id": dice_asset_record.id
+      }
+   };
     
-	// TODO the game data must have a index attr with type uint_32.
+   // TODO the game data must have a index attr with type uint_32.
     var dice_data = {
         index : data_index,
         amount : dice_amount,
@@ -136,49 +136,56 @@ PLAY.evaluate = function(eval_state, pending_state, input){
         odds : input.odds,
         guess : input.guess
     };
-	
-	return {
-		"to_balances" : [to_balance],
-		"datas" : [dice_data]
-	};
+   
+   return {
+      "to_balances" : [to_balance],
+      "datas" : [dice_data]
+   };
 };
 
 // game execute during extain chain and deterministrix transaction apply
+// @return 
+// 	0: if nothing need to done
+//  {"execute_results": [game_result_transactions], "game_datas": [], "diff_balances": [balances_to_update], "diff_supply": [assets]}
 PLAY.execute = function (blockchain, block_num, pending_state){
-	if (block_num <= BTS_BLOCKCHAIN_NUM_DICE){
-   	    return;
-	}
+   print("block number is" + block_num);
+   if (block_num <= BTS_BLOCKCHAIN_NUM_DICE){
+          return 0;
+   }
 
-	var random_seed = blockchain.get_current_random_seed();
-	print(random_seed);
+   var random_seed = blockchain.get_current_random_seed();
+   print(random_seed);
 
-	var hash_array = trx_id_to_hash_array(random_seed);
-	
-	var block_random_num = hash_array[0];
-	print (block_random_num);
+   var hash_array = trx_id_to_hash_array(random_seed);
+   
+   var block_random_num = hash_array[0];
+   print (block_random_num);
 
-	var range = BTS_BLOCKCHAIN_DICE_RANGE;
+   var range = BTS_BLOCKCHAIN_DICE_RANGE;
 
-	var block_num_of_dice = block_num - BTS_BLOCKCHAIN_NUM_DICE;
+   var block_num_of_dice = block_num - BTS_BLOCKCHAIN_NUM_DICE;
+   print(block_num_of_dice);
 
-	var block_of_dice = blockchain.get_block(block_num_of_dice);
-	print(block_of_dice);
-	
-	var trxs = block_of_dice.get_transactions();
-	print(trxs);
-	
-	for (var trx in trxs)
-	{
-		var id = trx.id();
-		// TODO: define the type
-		var game_data = blockchain.get_game_data_record(type, trx_id_to_hash_array(id)[0]);
+   var block_digest_of_dice = blockchain.get_block_digest(block_num_of_dice);
+   print(block_digest_of_dice);
+   
+   var shares_destroyed = 0;
+   var shares_created = 0;
+   var result = {"execute_results": [], "game_datas": [], "diff_balances": [], "diff_supply": []};
+   for (var trx_id in block_digest_of_dice.user_transaction_ids)
+   {
+      var id = user_transaction_ids;
+	  var data_id = trx_id_to_hash_array(id)[0];
+	  
+      var game_data = blockchain.get_game_data_record(PLAY.game_id, data_id);
+	  print(game_data);
         
-		if (game_data)
-		{
-			// TODO hash to be defined in V8
-			var dice_random_num = trx_id_to_hash_array(id)[0];
-			
-			// win condition
+      if (game_data)
+      {
+         // TODO hash to be defined in V8
+         var dice_random_num = trx_id_to_hash_array(id)[0];
+         
+         // win condition
             var lucky_number = ( ( ( block_random_num % range ) + ( dice_random_num % range ) ) % range ) * (game_data.odds);
             var guess = game_data.guess;
             var jackpot = 0;
@@ -187,16 +194,15 @@ PLAY.execute = function (blockchain, block_num, pending_state){
                 jackpot = game_data.amount * (game_data.odds) * (100 - BTS_BLOCKCHAIN_DICE_HOUSE_EDGE) / 100;
                 
                 // add the jackpot to the accout's balance, give the jackpot from virtul pool to winner
-                   
-                // TODO: Dice, what should be the slate_id for the withdraw_with_signature, if need, we can set to the jackpot owner?
-                var jackpot_balance_address = V8_Global_Get_Balance_ID_For_Owner(game_data.owner, PLAY.game_asset.asset_id);
-                var jackpot_payout = pending_state.get_balance_record( jackpot_balance_address );
-                if( !jackpot_payout )
-                    jackpot_payout = balance_record( game_data.owner, asset(0, PLAY.game_asset.asset_id), PLAY.game_asset.asset_id);
-                jackpot_payout.balance += jackpot;
-                jackpot_payout.last_update = Date.now();
-                   
-                pending_state.store_balance_record( jackpot_payout );
+                result["diff_balances"].push(
+						{
+					      "owner" : game_data.owner,
+					      "asset" : {
+					         "amount"  : jackpot,
+					         "asset_id": PLAY.game_asset.asset_id
+					      }
+					   }
+                );
                    
                 shares_created += jackpot;
             }
@@ -204,9 +210,9 @@ PLAY.execute = function (blockchain, block_num, pending_state){
             // balance destroyed
             shares_destroyed += game_data.amount;
             
-			// remove the dice_record from pending state after execute the jackpot
-            pending_state.store_game_data_record(type, trx_id_to_hash_array(id)[0], null);
-               
+         	// remove the dice_record from pending state after execute the jackpot
+			result["game_datas"].push(data_id);	// meaning to remove it if directly return the data_id itself
+			
             var dice_trx = {
                 play_owner : game_data.owner,
                 jackpot_owner : game_data.owner,
@@ -216,18 +222,30 @@ PLAY.execute = function (blockchain, block_num, pending_state){
                 lucky_number : (lucky_number / range) + 1
             };
 
-            // TODO: There is no necessary for game_result_transaction to exsit anymore, dice_trx are directly stored as variant
-            game_result_transactions.push(game_result_transaction(dice_trx));
-		}
-	}
-	
-	pending_state.set_game_result_transactions( game_result_transactions );
-    
-    // TODO: what is asset_id_type?
-	var base_asset_record = pending_state.get_asset_record( asset_id_type(1) );
-	// FC_ASSERT( base_asset_record.valid() );
-	base_asset_record.current_share_supply += (shares_created - shares_destroyed);
-	pending_state.store_asset_record( base_asset_record );
+            result["execute_results"].push( dice_trx ); // game_result_transaction.data = dice_trx;
+      }
+   }
+   
+   result["diff_balances"].push({
+      // TODO: Game Logic: this does not means the balance are now stored in balance record, just over pass the api
+      // the dice record are not in any balance record, they are over-fly-on-sky.
+      // equal to use zero_condition(withdraw_with_signature(), dice_asset_record->id);
+      // XTS4Attt64KDdan23RJ1rf98cNPAmAp1YnSN = (convert_to_native_address 1Dice12345612345612345612345XLJ3zy)
+      "owner" : "XTS4Attt64KDdan23RJ1rf98cNPAmAp1YnSN",
+      "asset" : {
+         "amount"  : -shares_destroyed,
+         "asset_id": PLAY.game_asset.asset_id
+      }
+   });
+   
+   result["diff_supply"].push(
+	   {
+		   "amount"  : (shares_created - shares_destroyed),	// base_asset_record.current_share_supply += (shares_created - shares_destroyed);
+		   "asset_id": PLAY.game_asset.asset_id
+	   }
+   );
+   
+   return result;
 };
 
 PLAY.scan_result = function( game_result_trx, block_num, block_time, trx_index, wallet)
@@ -361,23 +379,4 @@ PLAY.scan = function( rule, wallet_transaction_record, wallet )
    
    return false;
 };
-
-// Data structures that is need by this game
-/******************
-    struct dice_transaction
-    {
-        static const uint8_t    type;
-        
-        dice_transaction(){}
-        
-        address                                   play_owner;
-        address                                   jackpot_owner;
-        share_type                                play_amount;
-        share_type                                jackpot_received;
-        uint32_t                                  odds;
-        uint32_t                                  lucky_number;
-    };
-    const uint8_t dice_rule::type = dice_rule_type;
-    const uint8_t dice_transaction::type = dice_rule_type;
-**************/
 

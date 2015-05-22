@@ -147,8 +147,13 @@ PLAY.evaluate = function(eval_state, pending_state, input){
 // @return 
 // 	0: if nothing need to done
 //  {"execute_results": [game_result_transactions], "game_datas": [], "diff_balances": [balances_to_update], "diff_supply": [assets]}
-PLAY.execute = function (blockchain, block_num, pending_state){
-   print("block number is" + block_num);
+PLAY.execute = function(blockchain, block_num, pending_state){
+	if (!blockchain)
+	{
+		return 0;
+	}
+	
+   print("block number is " + block_num);
    if (block_num <= BTS_BLOCKCHAIN_NUM_DICE){
           return 0;
    }
@@ -174,7 +179,7 @@ PLAY.execute = function (blockchain, block_num, pending_state){
    var result = {"execute_results": [], "game_datas": [], "diff_balances": [], "diff_supply": []};
    for (var trx_id in block_digest_of_dice.user_transaction_ids)
    {
-      var id = user_transaction_ids;
+      var id = trx_id;
 	  var data_id = trx_id_to_hash_array(id)[0];
 	  
       var game_data = blockchain.get_game_data_record(PLAY.game_id, data_id);
@@ -244,6 +249,8 @@ PLAY.execute = function (blockchain, block_num, pending_state){
 		   "asset_id": PLAY.game_asset.asset_id
 	   }
    );
+   
+   print(result);
    
    return result;
 };

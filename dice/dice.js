@@ -278,16 +278,6 @@ PLAY.scan_result = function( res_trx, block_num, block_time, trx_index, wallet)
         // auto bal_id = withdraw_condition(withdraw_with_signature(gtrx.jackpot_owner), 1 ).get_address();
         // auto bal_rec = _blockchain->get_balance_record( bal_id );
         
-        /* What we paid */
-        /*
-         auto out_entry = ledger_entry();
-         out_entry.from_account = jackpot_account_key;
-         out_entry.amount = asset( trx.play_amount );
-         std::stringstream out_memo_ss;
-         out_memo_ss << "play dice with odds: " << trx.odds;
-         out_entry.memo = out_memo_ss.str();
-         */
-        
         /* What we received */
         var ledger_entries = [];
         
@@ -310,7 +300,7 @@ PLAY.scan_result = function( res_trx, block_num, block_time, trx_index, wallet)
             block_num : block_num,
             is_virtual : true,
             is_confirmed : true,
-            is_market : true,
+            contract : PLAY.game_asset.symbol, 	// TODO: replace this contract name with game name.
             ledger_entries : ledger_entries,
             // TODO: Dice, do we need fee for claim jackpot? may be later we'll support part to delegates
             fee : {
@@ -339,6 +329,7 @@ PLAY.scan_result = function( res_trx, block_num, block_time, trx_index, wallet)
  */    
 PLAY.scan_ledger = function( trx_rec, wallet, input )
 {
+	print(trx_rec)
 	var has_deposit = false;
     var rec_key = wallet.get_wallet_key_for_address(input.owner);
     if( rec_key && ( rec_key.encrypted_private_key.length > 0 ) )

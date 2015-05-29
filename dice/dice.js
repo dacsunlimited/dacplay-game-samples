@@ -255,21 +255,25 @@ PLAY.execute = function(blockchain, block_num, pending_state){
    return result;
 };
 
-PLAY.scan_result = function( game_result_trx, block_num, block_time, trx_index, wallet)
+PLAY.scan_result = function( res_trx, block_num, block_time, trx_index, wallet)
 {
-    //try {
-    // auto gtrx = rtrx.as<dice_transaction>(); game_result_trx now is a variant/js_object it self, so no need to convert
-    var win = ( game_result_trx.jackpot_received != 0 );
+	print( res_trx );
+	print(block_time);
+	var game_result = res_trx.data;
+
+    var win = ( game_result.jackpot_received != 0 );
     var play_result = win ? "win" : "lose";
     
     // TODO: Dice, play owner might be different with jackpot owner
     // TODO: Accessor get_wallet_key_for_address for wallet
     // TODO: Accessor has_private_key for wallet_key
     // TODO: Property account_address for wallet_key
-    var okey_jackpot = wallet.get_wallet_key_for_address( game_result_trx.jackpot_owner );
-    if( okey_jackpot && okey_jackpot.has_private_key() )
+    var jackpot_key = wallet.get_wallet_key_for_address( game_result.jackpot_owner );
+	print( jackpot_key );
+    if( jackpot_key && (jackpot_key.encrypted_private_key.length > 0) )
     {
         var jackpot_account_key = wallet.get_wallet_key_for_address( okey_jackpot.account_address );
+		print( jackpot_account_key );
         
         // auto bal_id = withdraw_condition(withdraw_with_signature(gtrx.jackpot_owner), 1 ).get_address();
         // auto bal_rec = _blockchain->get_balance_record( bal_id );
@@ -288,102 +292,80 @@ PLAY.scan_result = function( game_result_trx, block_num, block_time, trx_index, 
         var ledger_entries = [];
         
         ledger_entries.push({
-            // TODO Property public_key for wallet_key
-            // TODO: Constructor for asset()
             to_account : jackpot_account_key.public_key,
-            amount : asset(game_result_trx.jackpot_received, 1),
-            memo : play_result + ", jackpot lucky number: " + game_result_trx.lucky_number
+            amount : {
+         	   "amount"  : game_result.jackpot_received,
+         	   "asset_id": PLAY.game_asset.asset_id
+      	  	},
+            memo : play_result + ", jackpot lucky number: " + game_result.lucky_number
         }
         );
+		
+		/* Construct a unique record id */
+		var id_ss = "" + block_num + game_result.jackpot_owner + trx_index;
         
         // TODO: Don't blow away memo, etc.
-        var wallet_transaction_record = {
-            //  Construct a unique record id, TODO: js method for fc::ripemd160::hash, could refer bitshares-js repository
-            // TODO: record_id : fc::ripemd160::hash( "" + block_num + game_result_trx.jackpot_owner + trx_index ),
+        var transaction_info = {
+            record_id : fc_ripemd160_hash( id_ss ),
             block_num : block_num,
             is_virtual : true,
             is_confirmed : true,
             is_market : true,
             ledger_entries : ledger_entries,
-            // TODO: Constructor for asset()
             // TODO: Dice, do we need fee for claim jackpot? may be later we'll support part to delegates
-            fee : asset(0),
+            fee : {
+         	   "amount"  : 0,
+         	   "asset_id": 0
+      	  	},
             created_time : block_time,
             received_time : received_time
         };
         
-        // TODO: Accessor store_transaction for wallet
-        wallet.store_transaction( wallet_transaction_record );
+        wallet.store_transaction( transaction_info );
     }
     
     return true;
     
     //} FC_CAPTURE_AND_RETHROW((rtrx)) 
 };
-    
-PLAY.scan = function( rule, wallet_transaction_record, wallet )
+
+/*
+ * This is only for wallet specific usage, not related to protocal. Usually, there will be a purpose for using funds, ant the wallet
+ * has a human-read ledger for recording the purpse of these funds changes, but it is not recorded in operation, so the only way is to
+ * scan out the purpose by checking the withdraw/deposit operations in the trx
+ * @parameters, wallet_transaction_record is the scaned deposit or withdraw operations from other nodes, need to rescan for updating memo
+ * @return array of entrys, if empty return []. and return false in C++
+ * 
+ */    
+PLAY.scan_ledger = function( trx_rec, wallet, input )
 {
-    // TODO: Accessor to type, (withdraw_condition_types) 
-    // TODO: Define withdraw type constants
-    switch( rule.condition.type )
+	var has_deposit = false;
+    var rec_key = wallet.get_wallet_key_for_address(input.owner);
+    if( rec_key && ( rec_key.encrypted_private_key.length > 0 ) )
     {
-        case withdraw_null_type:
+        // TODO: Refactor this
+        for( var entry in trx_rec.ledger_entries )
         {
-            // TODO
-            // FC_THROW( "withdraw_null_type not implemented!" );
-            break;
-        }
-        case withdraw_signature_type:
-        {
-            // TODO: auto condtion = rule.condition.as<withdraw_with_signature>();
-            // TODO: lookup if cached key and work with it only
-            // if( _wallet_db.has_private_key( deposit.owner ) )
-            if( rule.condtion.memo )
+            // TODO: Read Accessor to_account
+			// if( !entry.to_account.valid() )
+            if( !entry.to_account )
             {
-                // TODO: TITAN, FC_THROW( "withdraw_option_type not implemented!" );
-                break;
-            } else
-            {
+                entry.to_account = rec_key.public_key;
+                // TODO: Constructor asset( amount, 1 )
+                entry.amount = {
+         	   	 "amount"  : input.amount,
+         	   	 "asset_id": PLAY.game_asset.asset_id
+      	  		},
+                entry.memo = "play dice";
                 
-                var opt_key_rec = wallet.get_wallet_key_for_address(rule.condtion.owner);
-                if( opt_key_rec.valid() && opt_key_rec.has_private_key() )
-                {
-                    // TODO: Refactor this
-                    for( var entry in trx_rec.ledger_entries )
-                    {
-                        // TODO: Read Accessor to_account
-                        if( !entry.to_account.valid() )
-                        {
-                            // TODO: Write Accessor to following properties
-                            // TODO: Read Accessor to public_key
-                            entry.to_account = opt_key_rec.public_key;
-                            // TODO: Constructor asset( amount, 1 )
-                            entry.amount = asset( self.amount, PLAY.game_asset.asset_id );
-                            entry.memo = "play dice";
-                            return true;
-                        }
-                    }
-                }
+				has_deposit = true;
             }
-            break;
-        }
-        case withdraw_multisig_type:
-        {
-            // TODO: FC_THROW( "withdraw_multi_sig_type not implemented!" );
-            break;
-        }
-        case withdraw_password_type:
-        {
-            // TODO: FC_THROW( "withdraw_password_type not implemented!" );
-            break;
-        }
-        default:
-        {
-            // TODO: FC_THROW( "unknown withdraw condition type!" );
-            break;
         }
     }
-   
-   return false;
+	
+	return {
+		"wallet_trx_record" : trx_rec,
+		"has_deposit" : has_deposit
+	}
 };
 

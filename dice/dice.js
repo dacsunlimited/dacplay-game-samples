@@ -90,7 +90,7 @@ PLAY.evaluate = function(eval_state, pending_state, input){
     //    FC_CAPTURE_AND_THROW( invalid_dice_odds, (odds) );
         
     // V8_API: eval_state_current_state::get_asset_record
-    var dice_asset_record = pending_state.get_asset_record(PLAY.game_asset.symbol);
+   var dice_asset_record = pending_state.get_asset_record(PLAY.game_asset.symbol);
    print( dice_asset_record );
     // V8_Valid
     //if( !dice_asset_record )
@@ -127,12 +127,18 @@ PLAY.evaluate = function(eval_state, pending_state, input){
          "asset_id": dice_asset_record.id
       }
    };
+   
+   var account_rec = pending_state.get_account_record_by_name(input.from_account_name);
+   print( account_rec );
+   var active_key = account_rec.active_key;
+   //if ( !account_rec ) FC_ASSERT(false);
+   
     
    // TODO the game data must have a index attr with type uint_32.
     var dice_data = {
         index : data_index,
         amount : dice_amount,
-        owner : input.from_account, // self.owner() instead: input.from_account -> active_key -> owner_address -> withdraw_condition -> balance_id
+        owner : public_key_to_address(active_key),
         odds : input.odds,
         guess : input.guess
     };
@@ -181,6 +187,7 @@ PLAY.execute = function(blockchain, block_num, pending_state){
    {
       var id = trx_id;
 	  var data_id = trx_id_to_hash_array(id)[0];
+	  print(data_id);
 	  
       var game_data = blockchain.get_game_data_record(PLAY.game_id, data_id);
 	  print(game_data);
@@ -327,32 +334,43 @@ PLAY.scan_result = function( res_trx, block_num, block_time, trx_index, wallet)
  * @return array of entrys, if empty return []. and return false in C++
  * 
  */    
-PLAY.scan_ledger = function( trx_rec, wallet, input )
+PLAY.scan_ledger = function( blockchain, wallet, trx_rec, input )
 {
-	print(trx_rec)
+	print("start scan ledger...");
+	print(trx_rec);
+	print(input);
 	var has_deposit = false;
-    var rec_key = wallet.get_wallet_key_for_address(input.owner);
-    if( rec_key && ( rec_key.encrypted_private_key.length > 0 ) )
-    {
-        // TODO: Refactor this
-        for( var entry in trx_rec.ledger_entries )
-        {
-            // TODO: Read Accessor to_account
-			// if( !entry.to_account.valid() )
-            if( !entry.to_account )
-            {
-                entry.to_account = rec_key.public_key;
-                // TODO: Constructor asset( amount, 1 )
-                entry.amount = {
-         	   	 "amount"  : input.amount,
-         	   	 "asset_id": PLAY.game_asset.asset_id
-      	  		},
-                entry.memo = "play dice";
+	
+    var account_rec = pending_state.get_account_record_by_name( input.from_account_name );
+	print( account_rec );
+	
+	if ( account_rec )
+	{
+	    var owner = public_key_to_address(account_rec.active_key);
+	
+	    var rec_key = wallet.get_wallet_key_for_address(owner);
+	    if( rec_key && ( rec_key.encrypted_private_key.length > 0 ) )
+	    {
+	        // TODO: Refactor this
+	        for( var entry in trx_rec.ledger_entries )
+	        {
+	            // TODO: Read Accessor to_account
+				// if( !entry.to_account.valid() )
+	            if( !entry.to_account )
+	            {
+	                entry.to_account = rec_key.public_key;
+	                // TODO: Constructor asset( amount, 1 )
+	                entry.amount = {
+	         	   	 "amount"  : input.amount,
+	         	   	 "asset_id": PLAY.game_asset.asset_id
+	      	  		},
+	                entry.memo = "play dice";
                 
-				has_deposit = true;
-            }
-        }
-    }
+					has_deposit = true;
+	            }
+	        }
+	    }
+	}
 	
 	return {
 		"wallet_trx_record" : trx_rec,

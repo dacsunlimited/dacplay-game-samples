@@ -169,7 +169,7 @@ PLAY.execute = function(blockchain, block_num, pending_state){
 
    var hash_array = trx_id_to_hash_array(random_seed);
    
-   var block_random_num = hash_array[0];
+   var block_random_num = Math.abs(hash_array[0]);
    print (block_random_num);
 
    var range = BTS_BLOCKCHAIN_DICE_RANGE;
@@ -183,19 +183,23 @@ PLAY.execute = function(blockchain, block_num, pending_state){
    var shares_destroyed = 0;
    var shares_created = 0;
    var result = {"execute_results": [], "game_datas": [], "diff_balances": [], "diff_supply": []};
-   for (var trx_id in block_digest_of_dice.user_transaction_ids)
+   for (var pos in block_digest_of_dice.user_transaction_ids)
    {
-      var id = trx_id;
-	  var data_id = trx_id_to_hash_array(id)[0];
+      var id = block_digest_of_dice.user_transaction_ids[pos];
+	  print(id);
+	  var hash_array = trx_id_to_hash_array(id);
+	  print( hash_array );
+	  var data_id = hash_array[0];
 	  print(data_id);
 	  
-      var game_data = blockchain.get_game_data_record(PLAY.game_id, data_id);
-	  print(game_data);
+      var game_rec = blockchain.get_game_data_record(PLAY.game_id, data_id);
+	  print(game_rec);
         
-      if (game_data)
+      if (game_rec)
       {
-         // TODO hash to be defined in V8
-         var dice_random_num = trx_id_to_hash_array(id)[0];
+		 var game_data = game_rec.data;
+		  
+         var dice_random_num = Math.abs( trx_id_to_hash_array(id)[0] );
          
          // win condition
             var lucky_number = ( ( ( block_random_num % range ) + ( dice_random_num % range ) ) % range ) * (game_data.odds);
@@ -231,7 +235,7 @@ PLAY.execute = function(blockchain, block_num, pending_state){
                 play_amount : game_data.amount,
                 jackpot_received : jackpot,
                 odds : game_data.odds,
-                lucky_number : (lucky_number / range) + 1
+                lucky_number : parseInt(lucky_number / range) + 1
             };
 
             result["execute_results"].push( dice_trx ); // game_result_transaction.data = dice_trx;

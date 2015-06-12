@@ -242,6 +242,7 @@ PLAY.execute = function(blockchain, block_num, pending_state){
       }
    }
    
+   // TODO: do not need to add if the diff is 0.
    result["diff_balances"].push({
       // TODO: Game Logic: this does not means the balance are now stored in balance record, just over pass the api
       // the dice record are not in any balance record, they are over-fly-on-sky.
@@ -345,7 +346,7 @@ PLAY.scan_ledger = function( blockchain, wallet, trx_rec, input )
 	print(input);
 	var has_deposit = false;
 	
-    var account_rec = pending_state.get_account_record_by_name( input.from_account_name );
+    var account_rec = blockchain.get_account_record_by_name( input.from_account_name );
 	print( account_rec );
 	
 	if ( account_rec )
@@ -363,7 +364,6 @@ PLAY.scan_ledger = function( blockchain, wallet, trx_rec, input )
 	            if( !entry.to_account )
 	            {
 	                entry.to_account = rec_key.public_key;
-	                // TODO: Constructor asset( amount, 1 )
 	                entry.amount = {
 	         	   	 "amount"  : input.amount,
 	         	   	 "asset_id": PLAY.game_asset.asset_id

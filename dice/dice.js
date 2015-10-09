@@ -51,6 +51,7 @@ PLAY.play = function (blockchain, wallet, input) {
     //FC_ASSERT( input.odds > 0 );
 
     // V8_API: blockchain::get_asset_record
+    print(input);
     var asset_record = blockchain.get_asset_record(PLAY.game_asset.symbol);
     print(asset_record);
     //FC_ASSERT( asset_rec.valid() );

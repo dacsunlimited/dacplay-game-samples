@@ -43,7 +43,19 @@ PLAY.game_asset = {
  * provided with PLAY_CODE = [from_account, to_account, amount, memo, PLAY_CODE(optional)]
  * @return PLAY_CODE
  */
+PLAY.test = function()
+{
+  print("test function.");
+};
+
 PLAY.play = function (blockchain, wallet, input){
+    //try {    
+     
+    // V8_Vaild     
+    //FC_ASSERT( input.amount > 0 );     
+    //FC_ASSERT( input.odds > 0 );    
+     
+    // V8_API: blockchain::get_asset_record
     print("for testing ...");
     var asset_record = blockchain.get_asset_record(PLAY.game_asset.symbol);
     print(asset_record);

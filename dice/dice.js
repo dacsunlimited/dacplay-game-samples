@@ -339,9 +339,10 @@ PLAY.scan_result = function( res_trx, block_num, block_time, trx_index, wallet)
        print( transaction_info );
 
        wallet.store_transaction( transaction_info );
+       return true;
    }
 
-   return true;
+   return false;
 
    //} FC_CAPTURE_AND_RETHROW((rtrx))
 };

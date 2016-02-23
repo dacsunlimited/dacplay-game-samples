@@ -56,7 +56,6 @@ PLAY.play = function (blockchain, wallet, input){
     //FC_ASSERT( input.odds > 0 );    
      
     // V8_API: blockchain::get_asset_record
-    print("for testing ...");
     var asset_record = blockchain.get_asset_record(PLAY.game_asset.symbol);
     print(asset_record);
     //FC_ASSERT( asset_rec.valid() );
@@ -184,7 +183,6 @@ PLAY.execute = function(blockchain, block_num, pending_state){
    print(block_num_of_dice);
 
    var block_digest_of_dice = blockchain.get_block_digest(block_num_of_dice);
-   print("testing...");
    print(block_digest_of_dice);
 
    var shares_destroyed = 0;
@@ -282,65 +280,65 @@ PLAY.execute = function(blockchain, block_num, pending_state){
 PLAY.scan_result = function( res_trx, block_num, block_time, trx_index, wallet)
 {
 	print( res_trx );
-	print(block_time);
+   print("start scan_result...");
 	var game_result = res_trx.data;
 
-    var win = ( game_result.jackpot_received != 0 );
-    var play_result = win ? "win" : "lose";
+   var win = ( game_result.jackpot_received != 0 );
+   var play_result = win ? "win" : "lose";
 
-    // TODO: Dice, play owner might be different with jackpot owner
-    // TODO: Accessor get_wallet_key_for_address for wallet
-    // TODO: Accessor has_private_key for wallet_key
-    // TODO: Property account_address for wallet_key
-    var jackpot_key = wallet.get_wallet_key_for_address( game_result.jackpot_owner );
+   // TODO: Dice, play owner might be different with jackpot owner
+   // TODO: Accessor get_wallet_key_for_address for wallet
+   // TODO: Accessor has_private_key for wallet_key
+   // TODO: Property account_address for wallet_key
+   var jackpot_key = wallet.get_wallet_key_for_address( game_result.jackpot_owner );
 	print( jackpot_key );
-    if( jackpot_key && (jackpot_key.encrypted_private_key.length > 0) )
-    {
-        var jackpot_account_key = wallet.get_wallet_key_for_address( okey_jackpot.account_address );
-		print( jackpot_account_key );
+   if( jackpot_key && (jackpot_key.encrypted_private_key.length > 0) )
+   {
+       var jackpot_account_key = wallet.get_wallet_key_for_address( jackpot_key.account_address );
+	  print( jackpot_account_key );
 
-        // auto bal_id = withdraw_condition(withdraw_with_signature(gtrx.jackpot_owner), 1 ).get_address();
-        // auto bal_rec = _blockchain->get_balance_record( bal_id );
+       // auto bal_id = withdraw_condition(withdraw_with_signature(gtrx.jackpot_owner), 1 ).get_address();
+       // auto bal_rec = _blockchain->get_balance_record( bal_id );
 
-        /* What we received */
-        var ledger_entries = [];
+       /* What we received */
+       var ledger_entries = [];
 
-        ledger_entries.push({
-            to_account : jackpot_account_key.public_key,
-            amount : {
-         	   "amount"  : game_result.jackpot_received,
-         	   "asset_id": PLAY.game_asset.asset_id
-      	  	},
-            memo : play_result + ", jackpot lucky number: " + game_result.lucky_number
-        }
-        );
+       ledger_entries.push({
+           to_account : jackpot_account_key.public_key,
+           amount : {
+        	   "amount"  : game_result.jackpot_received,
+        	   "asset_id": PLAY.game_asset.asset_id
+     	  	},
+           memo : play_result + ", jackpot lucky number: " + game_result.lucky_number
+       }
+       );
 
-		/* Construct a unique record id */
-		var id_ss = "" + block_num + game_result.jackpot_owner + trx_index;
+	  /* Construct a unique record id */
+	  var id_ss = "" + block_num + game_result.jackpot_owner + trx_index;
 
-        // TODO: Don't blow away memo, etc.
-        var transaction_info = {
-            record_id : fc_ripemd160_hash( id_ss ),
-            block_num : block_num,
-            is_virtual : true,
-            is_confirmed : true,
-            contract : PLAY.game_asset.symbol, 	// TODO: replace this contract name with game name.
-            ledger_entries : ledger_entries,
-            // TODO: Dice, do we need fee for claim jackpot? may be later we'll support part to delegates
-            fee : {
-         	   "amount"  : 0,
-         	   "asset_id": 0
-      	  	},
-            created_time : block_time,
-            received_time : received_time
-        };
+       // TODO: Don't blow away memo, etc.
+       var transaction_info = {
+           record_id : fc_ripemd160_hash( id_ss ),
+           block_num : block_num,
+           is_virtual : true,
+           is_confirmed : true,
+           contract : PLAY.game_asset.symbol, 	// TODO: replace this contract name with game name.
+           ledger_entries : ledger_entries,
+           // TODO: Dice, do we need fee for claim jackpot? may be later we'll support part to delegates
+           fee : {
+        	   "amount"  : 0,
+        	   "asset_id": 0
+     	  	},
+           created_time : block_time,
+           received_time : received_time
+       };
 
-        wallet.store_transaction( transaction_info );
-    }
+       wallet.store_transaction( transaction_info );
+   }
 
-    return true;
+   return true;
 
-    //} FC_CAPTURE_AND_RETHROW((rtrx))
+   //} FC_CAPTURE_AND_RETHROW((rtrx))
 };
 
 /*

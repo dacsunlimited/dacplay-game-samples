@@ -280,6 +280,7 @@ PLAY.execute = function(blockchain, block_num, pending_state){
 PLAY.scan_result = function( res_trx, block_num, block_time, trx_index, wallet)
 {
 	print( res_trx );
+   print("trx_index is: " + trx_index);
    print("start scan_result...");
 	var game_result = res_trx.data;
 
@@ -295,7 +296,7 @@ PLAY.scan_result = function( res_trx, block_num, block_time, trx_index, wallet)
    if( jackpot_key && (jackpot_key.encrypted_private_key.length > 0) )
    {
        var jackpot_account_key = wallet.get_wallet_key_for_address( jackpot_key.account_address );
-	  print( jackpot_account_key );
+	    print( jackpot_account_key );
 
        // auto bal_id = withdraw_condition(withdraw_with_signature(gtrx.jackpot_owner), 1 ).get_address();
        // auto bal_rec = _blockchain->get_balance_record( bal_id );
@@ -313,8 +314,10 @@ PLAY.scan_result = function( res_trx, block_num, block_time, trx_index, wallet)
        }
        );
 
-	  /* Construct a unique record id */
-	  var id_ss = "" + block_num + game_result.jackpot_owner + trx_index;
+	    /* Construct a unique record id */
+	    var id_ss = "" + block_num + game_result.jackpot_owner + trx_index;
+       print(id_ss);
+       print(ledger_entries);
 
        // TODO: Don't blow away memo, etc.
        var transaction_info = {
@@ -330,8 +333,10 @@ PLAY.scan_result = function( res_trx, block_num, block_time, trx_index, wallet)
         	   "asset_id": 0
      	  	},
            created_time : block_time,
-           received_time : received_time
+           received_time : block_time 
        };
+       
+       print( transaction_info );
 
        wallet.store_transaction( transaction_info );
    }

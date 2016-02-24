@@ -163,6 +163,7 @@ PLAY.execute = function(blockchain, block_num, pending_state){
 	{
 		return 0;
 	}
+   print("after updateing game...");
 
    print("block number is " + block_num);
    if (block_num <= BTS_BLOCKCHAIN_NUM_DICE){

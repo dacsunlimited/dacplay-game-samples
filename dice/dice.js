@@ -163,7 +163,7 @@ PLAY.execute = function(blockchain, block_num, pending_state){
 	{
 		return 0;
 	}
-   print("after updateing game...");
+   print("testing game update...");
 
    print("block number is " + block_num);
    if (block_num <= BTS_BLOCKCHAIN_NUM_DICE){
@@ -402,4 +402,4 @@ PLAY.scan_ledger = function( blockchain, trx_rec, wallet, input )
 	}
 };
 
-PLAY.init = "success";
+PLAY.init_result = "successful";

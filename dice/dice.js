@@ -401,3 +401,5 @@ PLAY.scan_ledger = function( blockchain, trx_rec, wallet, input )
 		"has_deposit" : has_deposit
 	}
 };
+
+PLAY.init = "success";

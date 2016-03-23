@@ -43,9 +43,21 @@ PLAY.game_asset = {
  * provided with PLAY_CODE = [from_account, to_account, amount, memo, PLAY_CODE(optional)]
  * @return PLAY_CODE
  */
-PLAY.test = function()
+PLAY.global = function(game_id, game_assets)
 {
-  print("test function.");
+  print("Global initializing...");
+  print(game_id);
+  print(game_assets);
+  
+  if (game_assets.length < 1) return false;
+  
+  PLAY.game_id = game_id;
+  
+  PLAY.game_asset = game_assets[0];
+  // TODO: remove following change asset_id to id
+  PLAY.game_asset.asset_id = PLAY.game_asset.id;
+  print(PLAY.game_asset);
+  return true;
 };
 
 PLAY.play = function (blockchain, wallet, input){

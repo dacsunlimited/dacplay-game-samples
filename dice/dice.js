@@ -19,13 +19,6 @@ BTS_BLOCKCHAIN_DICE_HOUSE_EDGE = 0;
 
 PLAY.version = "0.0.2";
 
-// TODO: We should not have the assumption that the asset id equals to game id.
-// TODO: The game info and game asset info should be loaded from "outside" when init the game engine instead.
-PLAY.game_id = 1;
-PLAY.game_asset = {
-        asset_id : 1,
-        symbol : "DICE"
-    };
 /*
  * Play this game with input in the context to blockchain and wallet
  * V8_API: wallet::get_transaction_fee [Deprecated]
@@ -55,7 +48,6 @@ PLAY.global = function(game_id, game_assets)
   
   PLAY.game_asset = game_assets[0];
   // TODO: remove following change asset_id to id
-  PLAY.game_asset.asset_id = PLAY.game_asset.id;
   print(PLAY.game_asset);
   return true;
 };
@@ -238,7 +230,7 @@ PLAY.execute = function(blockchain, block_num, pending_state){
 					      "owner" : game_data.owner,
 					      "asset" : {
 					         "amount"  : jackpot,
-					         "asset_id": PLAY.game_asset.asset_id
+					         "asset_id": PLAY.game_asset.id
 					      }
 					   }
                 );
@@ -274,14 +266,14 @@ PLAY.execute = function(blockchain, block_num, pending_state){
       "owner" : "XTS4Attt64KDdan23RJ1rf98cNPAmAp1YnSN",
       "asset" : {
          "amount"  : -shares_destroyed,
-         "asset_id": PLAY.game_asset.asset_id
+         "asset_id": PLAY.game_asset.id
       }
    });
 
    result["diff_supply"].push(
 	   {
 		   "amount"  : (shares_created - shares_destroyed),	// base_asset_record.current_share_supply += (shares_created - shares_destroyed);
-		   "asset_id": PLAY.game_asset.asset_id
+		   "asset_id": PLAY.game_asset.id
 	   }
    );
 
@@ -321,7 +313,7 @@ PLAY.scan_result = function( res_trx, block_num, block_time, trx_index, wallet)
            to_account : jackpot_account_key.public_key,
            amount : {
         	   "amount"  : game_result.jackpot_received,
-        	   "asset_id": PLAY.game_asset.asset_id
+        	   "asset_id": PLAY.game_asset.id
      	  	},
            memo : play_result + ", jackpot lucky number: " + game_result.lucky_number
        }
@@ -397,7 +389,7 @@ PLAY.scan_ledger = function( blockchain, trx_rec, wallet, input )
 	                entry.to_account = rec_key.public_key;
 	                entry.amount = {
 	         	   	     "amount"  : input.amount,
-	         	   	     "asset_id": PLAY.game_asset.asset_id
+	         	   	     "asset_id": PLAY.game_asset.id
 	      	  		  },
 	                entry.memo = "play dice";
 

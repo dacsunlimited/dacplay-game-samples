@@ -291,11 +291,11 @@ PLAY.execute = function(blockchain, block_num, pending_state){
 
 PLAY.scan_result = function( res_trx, block_num, block_time, trx_index, wallet)
 {
+   print("start scan_result...");
    if (!PLAY.ready) return false;
 
 	print( res_trx );
    print("trx_index is: " + trx_index);
-   print("start scan_result...");
 	var game_result = res_trx.data;
 
    var win = ( game_result.jackpot_received != 0 );
@@ -371,9 +371,9 @@ PLAY.scan_result = function( res_trx, block_num, block_time, trx_index, wallet)
  */
 PLAY.scan_ledger = function( blockchain, trx_rec, wallet, input )
 {
+	print("start scan ledger...");
    if (!PLAY.ready) return false;
 
-	print("start scan ledger...");
 	print(trx_rec);
 	print(input);
 	var has_deposit = false;

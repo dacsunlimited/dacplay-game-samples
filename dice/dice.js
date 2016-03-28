@@ -17,7 +17,9 @@ BTS_BLOCKCHAIN_DICE_RANGE = 10000,
 
 BTS_BLOCKCHAIN_DICE_HOUSE_EDGE = 0;
 
-PLAY.version = "0.0.2";
+PLAY.version = "0.0.4";
+
+PLAY.ready = false;
 
 /*
  * Play this game with input in the context to blockchain and wallet
@@ -49,10 +51,12 @@ PLAY.global = function(game_id, game_assets)
   PLAY.game_asset = game_assets[0];
   // TODO: remove following change asset_id to id
   print(PLAY.game_asset);
+  PLAY.ready = true;
   return true;
 };
 
 PLAY.play = function (blockchain, wallet, input){
+    if (!PLAY.ready) return false;
     //try {    
      
     // V8_Vaild     
@@ -94,6 +98,8 @@ PLAY.play = function (blockchain, wallet, input){
  * }
  */
 PLAY.evaluate = function(eval_state, pending_state, input){
+    if (!PLAY.ready) return false;
+
     // V8_Valid
     //if( input.odds < 1 || input.odds < input.guess || input.guess < 1)
     //    FC_CAPTURE_AND_THROW( invalid_dice_odds, (odds) );
@@ -163,6 +169,7 @@ PLAY.evaluate = function(eval_state, pending_state, input){
 // 	0: if nothing need to done
 //  {"execute_results": [game_result_transactions], "game_datas": [], "diff_balances": [balances_to_update], "diff_supply": [assets]}
 PLAY.execute = function(blockchain, block_num, pending_state){
+   if (!PLAY.ready) return false;
 	if (!blockchain)
 	{
 		return 0;
@@ -284,6 +291,8 @@ PLAY.execute = function(blockchain, block_num, pending_state){
 
 PLAY.scan_result = function( res_trx, block_num, block_time, trx_index, wallet)
 {
+   if (!PLAY.ready) return false;
+
 	print( res_trx );
    print("trx_index is: " + trx_index);
    print("start scan_result...");
@@ -362,6 +371,8 @@ PLAY.scan_result = function( res_trx, block_num, block_time, trx_index, wallet)
  */
 PLAY.scan_ledger = function( blockchain, trx_rec, wallet, input )
 {
+   if (!PLAY.ready) return false;
+
 	print("start scan ledger...");
 	print(trx_rec);
 	print(input);

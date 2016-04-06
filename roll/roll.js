@@ -79,7 +79,7 @@ PLAY.play = function (blockchain, wallet, input){
       "asset_id": asset_record.id
    };
 
-   return [input.from_account_name, input.from_account_name, chips_to_play, "play wheel"];
+   return [input.from_account_name, input.from_account_name, chips_to_play, "play dice"];
 
     //} FC_CAPTURE_AND_RETHROW( (params) )
 };

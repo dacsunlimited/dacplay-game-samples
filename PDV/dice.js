@@ -40,17 +40,11 @@ PLAY.ready = false;
  */
 PLAY.global = function(game_id, game_assets)
 {
-  //print("Global initializing...");
-  //print(game_id);
-  //print(game_assets);
-  
   if (game_assets.length < 1) return false;
   
   PLAY.game_id = game_id;
   
   PLAY.game_asset = game_assets[0];
-  // TODO: remove following change asset_id to id
-  //print(PLAY.game_asset);
   PLAY.ready = true;
   return true;
 };
@@ -65,11 +59,9 @@ PLAY.play = function (blockchain, wallet, input){
      
     // V8_API: blockchain::get_asset_record
     var asset_record = blockchain.get_asset_record(PLAY.game_asset.symbol);
-    //print(asset_record);
     //FC_ASSERT( asset_rec.valid() );
 
     var amount_to_play = Math.ceil( input.amount * asset_record.precision );
-   //print( amount_to_play );
     // V8_Valid
     // FC_ASSERT( amount_to_play > 0 );
 
@@ -106,22 +98,17 @@ PLAY.evaluate = function(eval_state, pending_state, input){
 
     // V8_API: eval_state_current_state::get_asset_record
    var dice_asset_record = pending_state.get_asset_record(PLAY.game_asset.symbol);
-   //print( dice_asset_record );
     // V8_Valid
     //if( !dice_asset_record )
         //FC_CAPTURE_AND_THROW( unknown_asset_symbol, ( eval_state.trx.id() ) );
 
    var dice_amount = Math.ceil( input.amount * dice_asset_record.precision );
-   //print( dice_amount );
 
    var trx_id = eval_state.get_transaction_id();
-   //print( trx_id );
 
    var hash_array = trx_id_to_hash_array(trx_id);
-   //print ( hash_array );
 
    var data_index = hash_array[0];
-   //print ( data_index );
 
     // For each transaction, there must be only one dice operatiion exist
     // TODO: improve the rule id representation for rule record
@@ -135,8 +122,8 @@ PLAY.evaluate = function(eval_state, pending_state, input){
       // TODO: Game Logic: this does not means the balance are now stored in balance record, just over pass the api
       // the dice record are not in any balance record, they are over-fly-on-sky.
       // equal to use zero_condition(withdraw_with_signature(), dice_asset_record->id);
-      // PLS4Attt64KDdan23RJ1rf98cNPAmAp1YnSN = (convert_to_native_address 1Dice12345612345612345612345XLJ3zy)
-      "owner" : "PLS4Attt64KDdan23RJ1rf98cNPAmAp1YnSN",
+      // PDV4Attt64KDdan23RJ1rf98cNPAmAp1YnSN = (convert_to_native_address 1Dice12345612345612345612345XLJ3zy)
+      "owner" : "PDV4Attt64KDdan23RJ1rf98cNPAmAp1YnSN",
       "asset" : {
          "amount"  : dice_amount,
          "asset_id": dice_asset_record.id
@@ -144,7 +131,6 @@ PLAY.evaluate = function(eval_state, pending_state, input){
    };
 
    var account_rec = pending_state.get_account_record_by_name(input.from_account_name);
-   //print( account_rec );
    var active_key = account_rec.active_key;
    //if ( !account_rec ) FC_ASSERT(false);
 
@@ -174,28 +160,22 @@ PLAY.execute = function(blockchain, block_num, pending_state){
 	{
 		return 0;
 	}
-   //print("testing refactor...");
 
-   //print("block number is " + block_num);
    if (block_num <= BTS_BLOCKCHAIN_NUM_DICE){
           return 0;
    }
 
    var random_seed = blockchain.get_current_random_seed();
-   //print(random_seed);
 
    var hash_array = trx_id_to_hash_array(random_seed);
 
    var block_random_num = Math.abs(hash_array[0]);
-   //print (block_random_num);
 
    var range = BTS_BLOCKCHAIN_DICE_RANGE;
 
    var block_num_of_dice = block_num - BTS_BLOCKCHAIN_NUM_DICE;
-   //print(block_num_of_dice);
 
    var block_digest_of_dice = blockchain.get_block_digest(block_num_of_dice);
-   //print(block_digest_of_dice);
 
    var shares_destroyed = 0;
    var shares_created = 0;
@@ -208,14 +188,10 @@ PLAY.execute = function(blockchain, block_num, pending_state){
    for (var pos in block_digest_of_dice.user_transaction_ids)
    {
       var id = block_digest_of_dice.user_transaction_ids[pos];
-	  //print(id);
 	  var hash_array = trx_id_to_hash_array(id);
-	  //print( hash_array );
 	  var data_id = hash_array[0];
-	  //print(data_id);
 
       var game_rec = blockchain.get_game_data_record(PLAY.game_id, data_id);
-	  //print(game_rec);
 
       if (game_rec)
       {
@@ -257,6 +233,7 @@ PLAY.execute = function(blockchain, block_num, pending_state){
                 play_amount : game_data.amount,
                 jackpot_received : jackpot,
                 odds : game_data.odds,
+                guess: game_data.guess,
                 lucky_number : parseInt(lucky_number / range) + 1
             };
 
@@ -269,8 +246,8 @@ PLAY.execute = function(blockchain, block_num, pending_state){
       // TODO: Game Logic: this does not means the balance are now stored in balance record, just over pass the api
       // the dice record are not in any balance record, they are over-fly-on-sky.
       // equal to use zero_condition(withdraw_with_signature(), dice_asset_record->id);
-      // PLS4Attt64KDdan23RJ1rf98cNPAmAp1YnSN = (convert_to_native_address 1Dice12345612345612345612345XLJ3zy)
-      "owner" : "PLS4Attt64KDdan23RJ1rf98cNPAmAp1YnSN",
+      // PDV4Attt64KDdan23RJ1rf98cNPAmAp1YnSN = (convert_to_native_address 1Dice12345612345612345612345XLJ3zy)
+      "owner" : "PDV4Attt64KDdan23RJ1rf98cNPAmAp1YnSN",
       "asset" : {
          "amount"  : -shares_destroyed,
          "asset_id": PLAY.game_asset.id
@@ -284,18 +261,13 @@ PLAY.execute = function(blockchain, block_num, pending_state){
 	   }
    );
 
-   //print(result);
-
    return result;
 };
 
 PLAY.scan_result = function( res_trx, block_num, block_time, trx_index, wallet)
 {
-   //print("start scan_result...");
    if (!PLAY.ready) return false;
 
-	//print( res_trx );
-   //print("trx_index is: " + trx_index);
 	var game_result = res_trx.data;
 
    var win = ( game_result.jackpot_received != 0 );
@@ -306,11 +278,9 @@ PLAY.scan_result = function( res_trx, block_num, block_time, trx_index, wallet)
    // TODO: Accessor has_private_key for wallet_key
    // TODO: Property account_address for wallet_key
    var jackpot_key = wallet.get_wallet_key_for_address( game_result.jackpot_owner );
-	//print( jackpot_key );
    if( jackpot_key && (jackpot_key.encrypted_private_key.length > 0) )
    {
        var jackpot_account_key = wallet.get_wallet_key_for_address( jackpot_key.account_address );
-	    //print( jackpot_account_key );
 
        // auto bal_id = withdraw_condition(withdraw_with_signature(gtrx.jackpot_owner), 1 ).get_address();
        // auto bal_rec = _blockchain->get_balance_record( bal_id );
@@ -324,14 +294,12 @@ PLAY.scan_result = function( res_trx, block_num, block_time, trx_index, wallet)
         	   "amount"  : game_result.jackpot_received,
         	   "asset_id": PLAY.game_asset.id
      	  	},
-           memo : play_result + ", jackpot lucky number: " + game_result.lucky_number
+           memo : play_result + ";lucky_number:" + game_result.lucky_number + ";guess:" + game_result.guess + ";odds:" + game_result.odds
        }
        );
 
 	    /* Construct a unique record id */
 	    var id_ss = "" + block_num + game_result.jackpot_owner + trx_index;
-       //print(id_ss);
-       //print(ledger_entries);
 
        // TODO: Don't blow away memo, etc.
        var transaction_info = {
@@ -350,7 +318,6 @@ PLAY.scan_result = function( res_trx, block_num, block_time, trx_index, wallet)
            received_time : block_time 
        };
        
-       //print( transaction_info );
 
        wallet.store_transaction( transaction_info );
        return true;
@@ -371,26 +338,19 @@ PLAY.scan_result = function( res_trx, block_num, block_time, trx_index, wallet)
  */
 PLAY.scan_ledger = function( blockchain, trx_rec, wallet, input )
 {
-	//print("start scan ledger...");
    if (!PLAY.ready) return false;
 
-	//print(trx_rec);
-	//print(input);
 	var has_deposit = false;
 
   var account_rec = blockchain.get_account_record_by_name( input.from_account_name );
-	//print( account_rec );
 
 	if ( account_rec )
 	{
 	    var owner = public_key_to_address(account_rec.active_key);
-      //print(owner);
 	    var rec_key = wallet.get_wallet_key_for_address(owner);
-      //print(rec_key);
 	    if( rec_key && ( rec_key.encrypted_private_key.length > 0 ) )
 	    {
 	        // TODO: Refactor this
-          //print("start updating ledgers");
 	        for( var entry in trx_rec.ledger_entries )
 	        {
 	            // TODO: Read Accessor to_account
@@ -404,7 +364,6 @@ PLAY.scan_ledger = function( blockchain, trx_rec, wallet, input )
 	      	  		  },
 	                entry.memo = "play dice";
 
-                  //print("has_deposit updating ledgers true...");
 					        has_deposit = true;
 	            }
 	        }
